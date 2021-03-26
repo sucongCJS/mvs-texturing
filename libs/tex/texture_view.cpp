@@ -23,7 +23,7 @@ TextureView::TextureView(std::size_t id, mve::CameraInfo const & camera,
 
     mve::image::ImageHeaders header;
     try {
-         header = mve::image::load_file_headers(image_file);
+        header = mve::image::load_file_headers(image_file);
     } catch (util::Exception e) {
         std::cerr << "Could not load image header of " << image_file << std::endl;
         std::cerr << e.what() << std::endl;
@@ -39,25 +39,24 @@ TextureView::TextureView(std::size_t id, mve::CameraInfo const & camera,
     camera.fill_world_to_cam(*world_to_cam);
 }
 
-void
-TextureView::generate_validity_mask(void) {
+void TextureView::generate_validity_mask(void) {
     assert(image != NULL);
-    validity_mask.resize(width * height, true);
-    mve::ByteImage::Ptr checked = mve::ByteImage::create(width, height, 1);
+    validity_mask.resize(width * height, true);  // 图片的宽高
+    mve::ByteImage::Ptr checked = mve::ByteImage::create(width, height, 1);  // 如果已checked为255, 否则是0; 1表示单通道
 
     std::list<math::Vec2i> queue;
 
-    /* Start from the corners. */
+    // Start from the corners. 从四个角开始, 四个角都为白色
     queue.push_back(math::Vec2i(0,0));
-    checked->at(0, 0, 0) = 255;
+        checked->at(0, 0, 0) = 255;
     queue.push_back(math::Vec2i(0, height - 1));
-    checked->at(0, height - 1, 0) = 255;
+        checked->at(0, height - 1, 0) = 255;
     queue.push_back(math::Vec2i(width - 1, 0));
-    checked->at(width - 1, 0, 0) = 255;
+        checked->at(width - 1, 0, 0) = 255;
     queue.push_back(math::Vec2i(width - 1, height - 1));
-    checked->at(width - 1, height - 1, 0) = 255;
+        checked->at(width - 1, height - 1, 0) = 255;
 
-    while (!queue.empty()) {
+    while (!queue.empty()) {  // ?? 如果四个角都是黑的不就停了
         math::Vec2i pixel = queue.front();
         queue.pop_front();
 
@@ -65,14 +64,14 @@ TextureView::generate_validity_mask(void) {
         int const y = pixel[1];
 
         int sum = 0;
-        for (int c = 0; c < image->channels(); ++c) {
+        for (int c = 0; c < image->channels(); ++c) {  // 将所有通道的值加起来
             sum += image->at(x, y, c);
         }
 
-        if (sum == 0) {
+        if (sum == 0) {  // ?? 如果像素是黑色的
             validity_mask[x + y * width] = false;
 
-            std::vector<math::Vec2i> neighbours;
+            std::vector<math::Vec2i> neighbours;  // 上下左右邻居
             neighbours.push_back(math::Vec2i(x + 1, y));
             neighbours.push_back(math::Vec2i(x, y + 1));
             neighbours.push_back(math::Vec2i(x - 1, y));
@@ -82,7 +81,7 @@ TextureView::generate_validity_mask(void) {
                 math::Vec2i npixel = neighbours[i];
                 int const nx = npixel[0];
                 int const ny = npixel[1];
-                if (0 <= nx && nx < width && 0 <= ny && ny < height) {
+                if (0 <= nx && nx < width && 0 <= ny && ny < height) {  // 在范围内
                     if (checked->at(nx, ny, 0) == 0) {
                         queue.push_front(npixel);
                         checked->at(nx, ny, 0) = 255;
@@ -93,32 +92,33 @@ TextureView::generate_validity_mask(void) {
     }
 }
 
-void
-TextureView::load_image(void) {
+void TextureView::load_image(void) {
     if(image != NULL) return;
-    image = mve::image::load_file(image_file);
+    image = mve::image::load_file(image_file);  // ?为什么image是byteImage:把多个通道的信息都"平铺"顺序排列了 (image_io.cc)
 }
 
-void
-TextureView::generate_gradient_magnitude(void) {
+// 
+void TextureView::generate_gradient_magnitude(void) {
     assert(image != NULL);
-    mve::ByteImage::Ptr bw = mve::image::desaturate<std::uint8_t>(image, mve::image::DESATURATE_LUMINANCE);
+    mve::ByteImage::Ptr bw = mve::image::desaturate<std::uint8_t>(image, mve::image::DESATURATE_LUMINANCE);  // 得到灰度图
     gradient_magnitude = mve::image::sobel_edge<std::uint8_t>(bw);
 }
 
-void
-TextureView::erode_validity_mask(void) {
+// 如果是0, 那么那周围的9个都是false
+void TextureView::erode_validity_mask(void) {
     std::vector<bool> eroded_validity_mask(validity_mask);
 
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            if (x == 0 || x == width - 1 || y == 0 || y == height - 1) {
+            if (x == 0 || x == width - 1 || y == 0 || y == height - 1) {  // 如果是最外一圈的像素
                 validity_mask[x + y * width] = false;
                 continue;
             }
 
-            if (validity_mask[x + y * width]) continue;
-            for (int j = -1; j <= 1; ++j) {
+            if (validity_mask[x + y * width])  // 如果是255
+                continue;
+
+            for (int j = -1; j <= 1; ++j) {  // 9个格子
                 for (int i = -1; i <= 1; ++i) {
                     int const nx = x + i;
                     int const ny = y + j;
@@ -131,14 +131,13 @@ TextureView::erode_validity_mask(void) {
     validity_mask.swap(eroded_validity_mask);
 }
 
-void
-TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
-    math::Vec3f const & v3, FaceProjectionInfo * face_info, Settings const & settings) const {
+void TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2, math::Vec3f const & v3, 
+    FaceProjectionInfo * face_info, Settings const & settings) const {
 
     assert(image != NULL);
     assert(settings.data_term != DATA_TERM_GMI || gradient_magnitude != NULL);
 
-    math::Vec2f p1 = get_pixel_coords(v1);
+    math::Vec2f p1 = get_pixel_coords(v1);  // 将网格上的三维坐标转成image上的二维坐标
     math::Vec2f p2 = get_pixel_coords(v2);
     math::Vec2f p3 = get_pixel_coords(v3);
 
@@ -147,7 +146,7 @@ TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
     Tri tri(p1, p2, p3);
     float area = tri.get_area();
 
-    if (area < std::numeric_limits<float>::epsilon()) {
+    if (area < std::numeric_limits<float>::epsilon()) {  // 小于最小非零浮点数
         face_info->quality = 0.0f;
         return;
     }
@@ -156,7 +155,7 @@ TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
     math::Vec3d colors(0.0);
     double gmi = 0.0;
 
-    bool sampling_necessary = settings.data_term != DATA_TERM_AREA || settings.outlier_removal != OUTLIER_REMOVAL_NONE;
+    bool sampling_necessary = settings.data_term != DATA_TERM_AREA || settings.outlier_removal != OUTLIER_REMOVAL_NONE;  // ??
 
     if (sampling_necessary && area > 0.5f) {
         /* Sort pixels in ascending order of y */

@@ -22,7 +22,7 @@
 
 TEX_NAMESPACE_BEGIN
 
-/** Struct containing the quality and mean color of a face within a view. */
+/** Struct containing the quality and mean color of a face within a view. 这个面在哪个view能看到, 以及质量和平均颜色信息*/
 struct FaceProjectionInfo {
     std::uint16_t view_id;
     float quality;
@@ -160,7 +160,7 @@ TextureView::inside(math::Vec3f const & v1, math::Vec3f const & v2, math::Vec3f 
 
 inline math::Vec2f
 TextureView::get_pixel_coords(math::Vec3f const & vertex) const {
-    math::Vec3f pixel = projection * world_to_cam.mult(vertex, 1.0f);
+    math::Vec3f pixel = projection * world_to_cam.mult(vertex, 1.0f);  // ??怎么转
     pixel /= pixel[2];
     return math::Vec2f(pixel[0] - 0.5f, pixel[1] - 0.5f);
 }

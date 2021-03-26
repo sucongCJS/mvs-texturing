@@ -11,15 +11,15 @@
 
 TEX_NAMESPACE_BEGIN
 
-std::size_t remove_redundant_faces(mve::MeshInfo const & mesh_info, mve::TriangleMesh::Ptr mesh) {
+std::size_t remove_redundant_faces(mve::MeshInfo const & mesh_info, mve::TriangleMesh::Ptr mesh) {  // Ptr托管mesh
     mve::TriangleMesh::FaceList & faces = mesh->get_faces();
     mve::TriangleMesh::FaceList new_faces;
-    new_faces.reserve(faces.size());
+    new_faces.reserve(faces.size());  // 预留空间
 
     std::size_t num_redundant = 0;
-    for (std::size_t i = 0; i < faces.size(); i += 3) {
+    for (std::size_t i = 0; i < faces.size(); i += 3) {  // i 表示顶点
         std::size_t face_id = i / 3;
-        bool redundant = false;
+        bool redundant = false;  // 
         for (std::size_t j = 0; !redundant && j < 3; ++j) {
             mve::MeshInfo::AdjacentFaces const & adj_faces = mesh_info[faces[i + j]].faces;
             for (std::size_t k = 0; !redundant && k < adj_faces.size(); ++k) {

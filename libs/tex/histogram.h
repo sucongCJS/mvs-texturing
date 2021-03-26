@@ -19,10 +19,10 @@
   */
 class Histogram {
     private:
-        std::vector<unsigned int> bins;
+        std::vector<unsigned int> bins;  // 一定范围内的quality会被分到一个bin里
         float min;
         float max;
-        int num_values;
+        int num_values;  // value个数
 
     public:
         /** Constructs a histogram with num_bins bins which clamps values to [_min, _max]. */

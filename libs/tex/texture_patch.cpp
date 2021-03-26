@@ -38,8 +38,7 @@ TexturePatch::TexturePatch(TexturePatch const & texture_patch) {
 
 const float sqrt_2 = sqrt(2);
 
-void
-TexturePatch::adjust_colors(std::vector<math::Vec3f> const & adjust_values) {
+void TexturePatch::adjust_colors(std::vector<math::Vec3f> const & adjust_values) {
     assert(blending_mask != NULL);
 
     validity_mask->fill(0);
@@ -146,8 +145,7 @@ bool TexturePatch::valid_pixel(math::Vec2f pixel) const {
     return valid;
 }
 
-bool
-TexturePatch::valid_pixel(math::Vec2i pixel) const {
+bool TexturePatch::valid_pixel(math::Vec2i pixel) const {
     int const x = pixel[0];
     int const y = pixel[1];
 
@@ -159,8 +157,7 @@ TexturePatch::valid_pixel(math::Vec2i pixel) const {
     return valid;
 }
 
-math::Vec3f
-TexturePatch::get_pixel_value(math::Vec2f pixel) const {
+math::Vec3f TexturePatch::get_pixel_value(math::Vec2f pixel) const {
     assert(valid_pixel(pixel));
 
     math::Vec3f color;
@@ -168,8 +165,7 @@ TexturePatch::get_pixel_value(math::Vec2f pixel) const {
     return color;
 }
 
-void
-TexturePatch::set_pixel_value(math::Vec2i pixel, math::Vec3f color) {
+void TexturePatch::set_pixel_value(math::Vec2i pixel, math::Vec3f color) {
     assert(blending_mask != NULL);
     assert(valid_pixel(pixel));
 
@@ -177,8 +173,7 @@ TexturePatch::set_pixel_value(math::Vec2i pixel, math::Vec3f color) {
     blending_mask->at(pixel[0], pixel[1], 0) = 128;
 }
 
-void
-TexturePatch::blend(mve::FloatImage::ConstPtr orig) {
+void TexturePatch::blend(mve::FloatImage::ConstPtr orig) {
     poisson_blend(orig, blending_mask, image, 1.0f);
 
     /* Invalidate all pixels outside the boundary. */
@@ -194,8 +189,7 @@ TexturePatch::blend(mve::FloatImage::ConstPtr orig) {
 typedef std::vector<std::pair<int, int> > PixelVector;
 typedef std::set<std::pair<int, int> > PixelSet;
 
-void
-TexturePatch::prepare_blending_mask(std::size_t strip_width){
+void TexturePatch::prepare_blending_mask(std::size_t strip_width){
     int const width = blending_mask->width();
     int const height = blending_mask->height();
 
