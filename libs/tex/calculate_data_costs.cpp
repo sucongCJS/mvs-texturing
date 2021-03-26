@@ -313,9 +313,9 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
     std::size_t const num_views = texture_views->size();
 
     if (num_faces > std::numeric_limits<std::uint32_t>::max())
-        throw std::runtime_error("Exeeded maximal number of faces");
+        throw std::runtime_error("Exceeded maximal number of faces");
     if (num_views > std::numeric_limits<std::uint16_t>::max())
-        throw std::runtime_error("Exeeded maximal number of views");
+        throw std::runtime_error("Exceeded maximal number of views");
 
     FaceProjectionInfos face_projection_infos(num_faces);
     calculate_face_projection_infos(mesh, texture_views, settings, &face_projection_infos);

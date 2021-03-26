@@ -2,3 +2,5 @@ build/
 elibs/
 !elibs/CMakeLists/*
 !elibs/CMakeLists.txt
+.vs/
+*.json
