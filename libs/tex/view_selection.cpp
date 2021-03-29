@@ -15,6 +15,9 @@
 
 TEX_NAMESPACE_BEGIN
 
+/**
+ * Runs the view selection procedure and saves the labeling in the graph
+ */
 void view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const &) {
     using uint_t = unsigned int;
     using cost_t = float;

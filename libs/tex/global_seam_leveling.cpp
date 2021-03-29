@@ -137,8 +137,7 @@ calculate_difference(VertexProjectionInfos const & vertex_projection_infos,
     return difference;
 }
 
-void
-global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
+void global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     mve::MeshInfo const & mesh_info,
     std::vector<std::vector<VertexProjectionInfo> > const & vertex_projection_infos,
     std::vector<TexturePatch::Ptr> * texture_patches) {

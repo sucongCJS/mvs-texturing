@@ -51,44 +51,25 @@ Arguments parse_args(int argc, char **argv) {
         "\nA path and name for the output files, e.g. <path>/<to>/my_textured_mesh"
         "\nDon't append an obj extension. The application does that itself because it outputs multiple files (mesh, material file, texture files)."
         "\n");
-    args.add_option('D',"data_cost_file", true,
-        "Skip calculation of data costs and use the ones provided in the given file");
-    args.add_option('L',"labeling_file", true,
-        "Skip view selection and use the labeling provided in the given file");
+    args.add_option('D',"data_cost_file", true, "Skip calculation of data costs and use the ones provided in the given file");
+    args.add_option('L',"labeling_file", true, "Skip view selection and use the labeling provided in the given file");
     args.add_option('d',"data_term", true,
-        "Data term: {" +
-        choices<tex::DataTerm>() + "} [" +
-        choice_string<tex::DataTerm>(tex::DATA_TERM_GMI) + "]");
+        "Data term: {" + choices<tex::DataTerm>() + "} [" + choice_string<tex::DataTerm>(tex::DATA_TERM_GMI) + "]");
     args.add_option('s',"smoothness_term", true,
-        "Smoothness term: {" +
-        choices<tex::SmoothnessTerm>() + "} [" +
-        choice_string<tex::SmoothnessTerm>(tex::SMOOTHNESS_TERM_POTTS) + "]");
+        "Smoothness term: {" + choices<tex::SmoothnessTerm>() + "} [" + choice_string<tex::SmoothnessTerm>(tex::SMOOTHNESS_TERM_POTTS) + "]");
     args.add_option('o',"outlier_removal", true,
-        "Photometric outlier (pedestrians etc.) removal method: {" +
-        choices<tex::OutlierRemoval>() +  "} [" +
-        choice_string<tex::OutlierRemoval>(tex::OUTLIER_REMOVAL_NONE) + "]");
+        "Photometric outlier (pedestrians etc.) removal method: {" + choices<tex::OutlierRemoval>() +  "} [" + choice_string<tex::OutlierRemoval>(tex::OUTLIER_REMOVAL_NONE) + "]");
     args.add_option('t',"tone_mapping", true,
-        "Tone mapping method: {" +
-        choices<tex::ToneMapping>() +  "} [" +
-        choice_string<tex::ToneMapping>(tex::TONE_MAPPING_NONE) + "]");
-    args.add_option('v',"view_selection_model", false,
-        "Write out view selection model [false]");
-    args.add_option('\0', SKIP_GEOMETRIC_VISIBILITY_TEST, false,
-        "Skip geometric visibility test based on ray intersection [false]");
-    args.add_option('\0', SKIP_GLOBAL_SEAM_LEVELING, false,
-        "Skip global seam leveling [false]");
-    args.add_option('\0', SKIP_LOCAL_SEAM_LEVELING, false,
-        "Skip local seam leveling (Poisson editing) [false]");
-    args.add_option('\0', SKIP_HOLE_FILLING, false,
-        "Skip hole filling [false]");
-    args.add_option('\0', KEEP_UNSEEN_FACES, false,
-        "Keep unseen faces [false]");
-    args.add_option('\0', WRITE_TIMINGS, false,
-        "Write out timings for each algorithm step (OUT_PREFIX + _timings.csv)");
-    args.add_option('\0', NO_INTERMEDIATE_RESULTS, false,
-        "Do not write out intermediate results");
-    args.add_option('\0', NUM_THREADS, true,
-        "How many threads to use. Set 1 for determinism.");
+        "Tone mapping method: {" + choices<tex::ToneMapping>() +  "} [" + choice_string<tex::ToneMapping>(tex::TONE_MAPPING_NONE) + "]");
+    args.add_option('v',"view_selection_model", false, "Write out view selection model [false]");
+    args.add_option('\0', SKIP_GEOMETRIC_VISIBILITY_TEST, false, "Skip geometric visibility test based on ray intersection [false]");
+    args.add_option('\0', SKIP_GLOBAL_SEAM_LEVELING, false, "Skip global seam leveling [false]");
+    args.add_option('\0', SKIP_LOCAL_SEAM_LEVELING, false, "Skip local seam leveling (Poisson editing) [false]");
+    args.add_option('\0', SKIP_HOLE_FILLING, false, "Skip hole filling [false]");
+    args.add_option('\0', KEEP_UNSEEN_FACES, false, "Keep unseen faces [false]");
+    args.add_option('\0', WRITE_TIMINGS, false, "Write out timings for each algorithm step (OUT_PREFIX + _timings.csv)");
+    args.add_option('\0', NO_INTERMEDIATE_RESULTS, false, "Do not write out intermediate results");
+    args.add_option('\0', NUM_THREADS, true, "How many threads to use. Set 1 for determinism.");
     args.parse(argc, argv);
 
     Arguments conf;
@@ -107,66 +88,48 @@ Arguments parse_args(int argc, char **argv) {
     conf.num_threads = -1;
 
     /* Handle optional arguments. */
-    for (util::ArgResult const* i = args.next_option();
-         i != 0; i = args.next_option()) {
+    for (util::ArgResult const* i = args.next_option(); i != 0; i = args.next_option()) {
         switch (i->opt->sopt) {
-        case 'v':
-            conf.write_view_selection_model = true;
-        break;
-        case 'D':
-            conf.data_cost_file = i->arg;
-        break;
-        case 'L':
-            conf.labeling_file = i->arg;
-        break;
-        case 'd':
-            conf.settings.data_term = parse_choice<tex::DataTerm>(i->arg);
-        break;
-        case 's':
-            conf.settings.smoothness_term = parse_choice<tex::SmoothnessTerm>(i->arg);
-        break;
-        case 'o':
-            conf.settings.outlier_removal = parse_choice<tex::OutlierRemoval>(i->arg);
-        break;
-        case 't':
-            conf.settings.tone_mapping = parse_choice<tex::ToneMapping>(i->arg);
-        break;
-        case '\0':
-            if (i->opt->lopt == SKIP_GEOMETRIC_VISIBILITY_TEST) {
-                conf.settings.geometric_visibility_test = false;
-            } else if (i->opt->lopt == SKIP_GLOBAL_SEAM_LEVELING) {
-                conf.settings.global_seam_leveling = false;
-            } else if (i->opt->lopt == SKIP_LOCAL_SEAM_LEVELING) {
-                conf.settings.local_seam_leveling = false;
-            } else if (i->opt->lopt == SKIP_HOLE_FILLING) {
-                conf.settings.hole_filling = false;
-            } else if (i->opt->lopt == KEEP_UNSEEN_FACES) {
-                conf.settings.keep_unseen_faces = true;
-            } else if (i->opt->lopt == WRITE_TIMINGS) {
-                conf.write_timings = true;
-            } else if (i->opt->lopt == NO_INTERMEDIATE_RESULTS) {
-                conf.write_intermediate_results = false;
-            } else if (i->opt->lopt == NUM_THREADS) {
-                conf.num_threads = std::stoi(i->arg);
-            } else {
-                throw std::invalid_argument("Invalid long option");
-            }
-        break;
-        default:
-            throw std::invalid_argument("Invalid short option");
+            case 'v': conf.write_view_selection_model = true; break;
+            case 'D': conf.data_cost_file = i->arg; break;
+            case 'L': conf.labeling_file = i->arg; break;
+            case 'd': conf.settings.data_term = parse_choice<tex::DataTerm>(i->arg); break;
+            case 's': conf.settings.smoothness_term = parse_choice<tex::SmoothnessTerm>(i->arg); break;
+            case 'o': conf.settings.outlier_removal = parse_choice<tex::OutlierRemoval>(i->arg); break;
+            case 't': conf.settings.tone_mapping = parse_choice<tex::ToneMapping>(i->arg); break;
+            case '\0':
+                if (i->opt->lopt == SKIP_GEOMETRIC_VISIBILITY_TEST)
+                    conf.settings.geometric_visibility_test = false;
+                else if (i->opt->lopt == SKIP_GLOBAL_SEAM_LEVELING)
+                    conf.settings.global_seam_leveling = false;
+                else if (i->opt->lopt == SKIP_LOCAL_SEAM_LEVELING)
+                    conf.settings.local_seam_leveling = false;
+                else if (i->opt->lopt == SKIP_HOLE_FILLING)
+                    conf.settings.hole_filling = false;
+                else if (i->opt->lopt == KEEP_UNSEEN_FACES)
+                    conf.settings.keep_unseen_faces = true;
+                else if (i->opt->lopt == WRITE_TIMINGS)
+                    conf.write_timings = true;
+                else if (i->opt->lopt == NO_INTERMEDIATE_RESULTS)
+                    conf.write_intermediate_results = false;
+                else if (i->opt->lopt == NUM_THREADS)
+                    conf.num_threads = std::stoi(i->arg);
+                else
+                    throw std::invalid_argument("Invalid long option");
+                break;
+            default:
+                throw std::invalid_argument("Invalid short option");
         }
     }
 
     return conf;
 }
 
-std::string
-bool_to_string(bool b){
+std::string bool_to_string(bool b){
     return b ? "True" : "False";
 }
 
-std::string
-Arguments::to_string(){
+std::string Arguments::to_string(){
     std::stringstream out;
     out << "Input scene: \t" << in_scene << std::endl
         << "Input mesh: \t" << in_mesh << std::endl

@@ -19,8 +19,7 @@
 
 TEX_NAMESPACE_BEGIN
 
-void
-from_mve_scene(std::string const & scene_dir, std::string const & image_name,
+void from_mve_scene(std::string const & scene_dir, std::string const & image_name,
     std::vector<TextureView> * texture_views) {
 
     mve::Scene::Ptr scene;
@@ -44,16 +43,14 @@ from_mve_scene(std::string const & scene_dir, std::string const & image_name,
         }
 
         if (!view->has_image(image_name, mve::IMAGE_TYPE_UINT8)) {
-            std::cout << "Warning: View " << view->get_name() << " has no byte image "
-                << image_name << std::endl;
+            std::cout << "Warning: View " << view->get_name() << " has no byte image "<< image_name << std::endl;
             continue;
         }
 
         mve::View::ImageProxy const * image_proxy = view->get_image_proxy(image_name);
 
         if (image_proxy->channels < 3) {
-            std::cerr << "Image " << image_name << " of view " <<
-                view->get_name() << " is not a color image!" << std::endl;
+            std::cerr << "Image " << image_name << " of view " << view->get_name() << " is not a color image!" << std::endl;
             exit(EXIT_FAILURE);
         }
 
@@ -64,8 +61,7 @@ from_mve_scene(std::string const & scene_dir, std::string const & image_name,
     }
 }
 
-void
-from_images_and_camera_files(std::string const & path,
+void from_images_and_camera_files(std::string const & path,
     std::vector<TextureView> * texture_views, std::string const & tmp_dir)
 {
     util::fs::Directory dir(path);
@@ -175,9 +171,7 @@ from_images_and_camera_files(std::string const & path,
     }
 }
 
-void
-from_nvm_scene(std::string const & nvm_file,
-    std::vector<TextureView> * texture_views, std::string const & tmp_dir)
+void from_nvm_scene(std::string const & nvm_file, std::vector<TextureView> * texture_views, std::string const & tmp_dir)
 {
     std::vector<mve::NVMCameraInfo> nvm_cams;
     mve::Bundle::Ptr bundle = mve::load_nvm_bundle(nvm_file, &nvm_cams);
@@ -215,8 +209,7 @@ from_nvm_scene(std::string const & nvm_file,
     }
 }
 
-void
-generate_texture_views(std::string const & in_scene,
+void generate_texture_views(std::string const & in_scene,
     std::vector<TextureView> * texture_views, std::string const & tmp_dir)
 {
     /* Determine input format. */

@@ -42,21 +42,18 @@ typedef std::vector<std::vector<FaceProjectionInfo> > FaceProjectionInfos;
   *  -removes duplicated faces
   *  -ensures normals (face and vertex)
   */
-void
-prepare_mesh(mve::MeshInfo * mesh_info, mve::TriangleMesh::Ptr mesh);
+void prepare_mesh(mve::MeshInfo * mesh_info, mve::TriangleMesh::Ptr mesh);
 
 /**
   * Generates TextureViews from the in_scene.
   */
-void
-generate_texture_views(std::string const & in_scene,
+void generate_texture_views(std::string const & in_scene,
     TextureViews * texture_views, std::string const & tmp_dir);
 
 /**
   * Builds up the meshes face adjacency graph using the vertex_infos
   */
-void
-build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh,
+void build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh,
     mve::MeshInfo const & mesh_info, UniGraph * graph);
 
 /**
@@ -76,8 +73,7 @@ postprocess_face_infos(Settings const & settings,
 /**
  * Runs the view selection procedure and saves the labeling in the graph
  */
-void
-view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const & settings);
+void view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const & settings);
 
 /**
   * Generates texture patches using the graph to determine adjacent faces with the same label.

@@ -47,11 +47,12 @@ int main(int argc, char **argv) {
         std::cerr << "Destination directory does not exist!" << std::endl;
         std::exit(EXIT_FAILURE);
     }
-
+ 
     std::string const tmp_dir = util::fs::join_path(out_dir, "tmp");
     if (!util::fs::dir_exists(tmp_dir.c_str())) {
         util::fs::mkdir(tmp_dir.c_str());
-    } else {
+    } 
+    else {
         std::cerr
             << "Temporary directory \"tmp\" exists within the destination directory.\n"
             << "Cannot continue since this directory would be delete in the end.\n"
@@ -75,9 +76,9 @@ int main(int argc, char **argv) {
         std::exit(EXIT_FAILURE);
     }
     mve::MeshInfo mesh_info(mesh);
-    tex::prepare_mesh(&mesh_info, mesh);
+    tex::prepare_mesh(&mesh_info, mesh);  // 移除冗余面
 
-    std::cout << "Generating texture views: " << std::endl;
+    std::cout << "Generating texture views: " << std::endl;  // 
     tex::TextureViews texture_views;
     tex::generate_texture_views(conf.in_scene, &texture_views, tmp_dir);
 
@@ -90,7 +91,7 @@ int main(int argc, char **argv) {
     tex::Graph graph(num_faces);
     tex::build_adjacency_graph(mesh, mesh_info, &graph);
 
-    if (conf.labeling_file.empty()) {
+    if (conf.labeling_file.empty()) {  // 传入的参数中是否有skip view selection
         std::cout << "View selection:" << std::endl;
         util::WallTimer rwtimer;
 
@@ -133,7 +134,8 @@ int main(int argc, char **argv) {
             }
             vector_to_file(conf.out_prefix + "_labeling.vec", labeling);
         }
-    } else {
+    }
+    else {
         std::cout << "Loading labeling from file... " << std::flush;
 
         /* Load labeling from file. */

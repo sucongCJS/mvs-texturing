@@ -13,8 +13,7 @@
 
 TEX_NAMESPACE_BEGIN
 
-void
-build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh,
+void build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh,
     mve::MeshInfo const & mesh_info, UniGraph * graph)  {
 
     mve::TriangleMesh::FaceList const & faces = mesh->get_faces();
@@ -29,13 +28,13 @@ build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh,
         std::size_t v3 = faces[i + 2];
 
         std::vector<std::size_t> adj_faces;
-        mesh_info.get_faces_for_edge(v1, v2, &adj_faces);
-        mesh_info.get_faces_for_edge(v2, v3, &adj_faces);
-        mesh_info.get_faces_for_edge(v3, v1, &adj_faces);
+        mesh_info.get_faces_for_edge(v1, v2, &adj_faces);  // adj_faces保存v1, v2共同相邻的面
+        mesh_info.get_faces_for_edge(v2, v3, &adj_faces);  // adj_faces继续加入v2, v3共同的相邻面
+        mesh_info.get_faces_for_edge(v3, v1, &adj_faces);  // 
 
         for (std::size_t j = 0; j < adj_faces.size(); ++j) {
             /* Face id vs. face position. */
-            std::size_t face = i / 3;
+            std::size_t face = i / 3;  // face id
             std::size_t adj_face = adj_faces[j];
 
             /* Avoid self referencing. */

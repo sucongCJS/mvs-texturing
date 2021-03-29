@@ -54,8 +54,7 @@ std::size_t remove_redundant_faces(mve::MeshInfo const & mesh_info, mve::Triangl
     return num_redundant;
 }
 
-void
-prepare_mesh(mve::MeshInfo * mesh_info, mve::TriangleMesh::Ptr mesh) {
+void prepare_mesh(mve::MeshInfo * mesh_info, mve::TriangleMesh::Ptr mesh) {
     std::size_t num_redundant = remove_redundant_faces(*mesh_info, mesh);
     if (num_redundant > 0) {
         std::cout << "\tRemoved " << num_redundant << " redundant faces." << std::endl;
