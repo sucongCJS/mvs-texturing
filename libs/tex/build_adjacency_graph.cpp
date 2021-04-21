@@ -13,6 +13,7 @@
 
 TEX_NAMESPACE_BEGIN
 
+// 有共用的顶点就算相邻??
 void build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh,
     mve::MeshInfo const & mesh_info, UniGraph * graph)  {
 

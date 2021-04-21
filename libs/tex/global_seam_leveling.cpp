@@ -146,28 +146,28 @@ void global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr me
     std::size_t const num_vertices = vertices.size();
 
     std::cout << "\tCreate matrices for optimization... " << std::flush;
-    std::vector<std::map<std::size_t, std::size_t> > vertlabel2row;
+    std::vector<std::map<std::size_t, std::size_t> > vertlabel2row;  // 把顶点和view对应起来, 一个顶点可能被多个面共用, 所以一个顶点可能对多个view, 但相同的view有不同的序号  vertlabel2row[顶点_id(即在mesh中所有顶点的索引)][view_id] = view的序号(即x_row)
     vertlabel2row.resize(num_vertices);
 
-    std::vector<std::vector<std::size_t> > labels;
+    std::vector<std::vector<std::size_t> > labels;  // 索引和顶点在mesh中的索引一样 {{view的id}}
     labels.resize(num_vertices);
 
     /* Assign each vertex for each label a new index(row) within the solution vector x. */
-    std::size_t x_row = 0;
-    for (std::size_t i = 0; i < num_vertices; ++i) {
-        std::set<std::size_t> label_set;
+    std::size_t x_row = 0;  // view的序号
+    for (std::size_t i = 0; i < num_vertices; ++i) {  // 遍历每个顶点
+        std::set<std::size_t> label_set;  // 集合 如果使用当前顶点的多个面来自同一个view, 只保留一个
 
-        std::vector<std::size_t> faces = mesh_info[i].faces;
+        std::vector<std::size_t> faces = mesh_info[i].faces;  // 相邻面
         std::set<std::size_t>::iterator it = label_set.begin();
-        for (std::size_t j = 0; j < faces.size(); ++j) {
-            std::size_t label = graph.get_label(faces[j]);
+        for (std::size_t j = 0; j < faces.size(); ++j) {  // 遍历每个相邻面, 找出这个顶点相邻的面片用到的view有哪些
+            std::size_t label = graph.get_label(faces[j]);  // 面用的是哪个view
             label_set.insert(it, label);
         }
 
-        for (it = label_set.begin(); it != label_set.end(); ++it) {
+        for (it = label_set.begin(); it != label_set.end(); ++it) {  // 遍历顶点相邻的面用到的view
             std::size_t label = *it;
             if (label == 0) continue;
-            vertlabel2row[i][label] = x_row;
+            vertlabel2row[i][label] = x_row;  // 
             labels[i].push_back(label);
             ++x_row;
         }
@@ -178,18 +178,18 @@ void global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr me
     float const lambda = 0.1f;
 
     /* Fill the Tikhonov matrix Gamma(regularization constraints). */
-    std::size_t Gamma_row = 0;
-    std::vector<Eigen::Triplet<float, int> > coefficients_Gamma;
+    std::size_t Gamma_row = 0;  // 表示有多少对在同一个patch又相邻的顶点
+    std::vector<Eigen::Triplet<float, int> > coefficients_Gamma;  // A small structure to hold a non zero as a triplet (i,j,value).  用来选中在同一个纹理块的顶点, 给他们的g加个正则项防止过大  [从0开始的索引][view的序号]:+/-λ
     coefficients_Gamma.reserve(2 * num_vertices);
-    for (std::size_t i = 0; i < num_vertices; ++i) {
-        for (std::size_t j = 0; j < labels[i].size(); ++j) {
-            std::vector<std::size_t> const & adj_verts = mesh_info[i].verts;
-            for (std::size_t k = 0; k < adj_verts.size(); ++k) {
+    for (std::size_t i = 0; i < num_vertices; ++i) {  // 遍历每个顶点
+        for (std::size_t j = 0; j < labels[i].size(); ++j) {  // 遍历每个顶点连接的view
+            std::vector<std::size_t> const & adj_verts = mesh_info[i].verts;  // 相邻顶点
+            for (std::size_t k = 0; k < adj_verts.size(); ++k) {  // 遍历相邻顶点
                 std::size_t adj_vertex = adj_verts[k];
-                for (std::size_t l = 0; l < labels[adj_vertex].size(); ++l) {
-                    std::size_t label = labels[i][j];
-                    std::size_t adj_vertex_label = labels[adj_vertex][l];
-                    if (i < adj_vertex && label == adj_vertex_label) {
+                for (std::size_t l = 0; l < labels[adj_vertex].size(); ++l) {  // 遍历相邻顶点连接的view
+                    std::size_t label = labels[i][j];  // 当前顶点的一个view
+                    std::size_t adj_vertex_label = labels[adj_vertex][l];  // 相邻顶点的一个view
+                    if (i < adj_vertex && label == adj_vertex_label) {  // 两个顶点用的是同一个view
                         Eigen::Triplet<float, int> t1(Gamma_row, vertlabel2row[i][label], lambda);
                         Eigen::Triplet<float, int> t2(Gamma_row, vertlabel2row[adj_vertex][adj_vertex_label], -lambda);
                         coefficients_Gamma.push_back(t1);
@@ -203,19 +203,19 @@ void global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr me
     std::size_t Gamma_rows = Gamma_row;
     assert(Gamma_rows < static_cast<std::size_t>(std::numeric_limits<int>::max()));
 
-    SpMat Gamma(Gamma_rows, x_rows);
+    SpMat Gamma(Gamma_rows, x_rows);  // (相邻顶点且相同view的个数, 顶点的view的组合个数)
     Gamma.setFromTriplets(coefficients_Gamma.begin(), coefficients_Gamma.end());
 
     /* Fill the matrix A and the coefficients for the Vector b of the linear equation system. */
-    std::vector<Eigen::Triplet<float, int> > coefficients_A;
+    std::vector<Eigen::Triplet<float, int> > coefficients_A;  // [从0开始的索引][view的序号]:+/-1
     std::vector<math::Vec3f> coefficients_b;
     std::size_t A_row = 0;
     for (std::size_t i = 0; i < num_vertices; ++i) {
-        for (std::size_t j = 0; j < labels[i].size(); ++j) {
+        for (std::size_t j = 0; j < labels[i].size(); ++j) {  // 遍历顶点连接的view
             for (std::size_t k = 0; k < labels[i].size(); ++k) {
                 std::size_t label1 = labels[i][j];
                 std::size_t label2 = labels[i][k];
-                if (label1 < label2) {
+                if (label1 < label2) {  // 不同的patch才有seam
 
                     std::vector<MeshEdge> seam_edges;
                     find_seam_edges_for_vertex_label_combination(graph, mesh, mesh_info, i, label1, label2, &seam_edges);
@@ -238,16 +238,16 @@ void global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr me
     std::size_t A_rows = A_row;
     assert(A_rows < static_cast<std::size_t>(std::numeric_limits<int>::max()));
 
-    SpMat A(A_rows, x_rows);
+    SpMat A(A_rows, x_rows);  // (接缝的数量, 顶点的view的组合个数)
     A.setFromTriplets(coefficients_A.begin(), coefficients_A.end());
 
     SpMat Lhs = A.transpose() * A + Gamma.transpose() * Gamma;
     /* Only keep lower triangle (CG only uses the lower), prune the rest and compress matrix. */
-    Lhs.prune([](const int& row, const int& col, const float& value) -> bool {
-            return col <= row && value != 0.0f;
+    Lhs.prune([](const int& row, const int& col, const float& value) -> bool {  // left hand side
+            return col <= row && value != 0.0f;  // 下三角
         }); // value != 0.0f is only to suppress a compiler warning
 
-    std::vector<std::map<std::size_t, math::Vec3f> > adjust_values(num_vertices);
+    std::vector<std::map<std::size_t, math::Vec3f> > adjust_values(num_vertices);  // 每个顶点的调整值1
     std::cout << " done." << std::endl;
     std::cout << "\tLhs dimensionality: " << Lhs.rows() << " x " << Lhs.cols() << std::endl;
 
@@ -258,7 +258,7 @@ void global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr me
         /* Prepare solver. */
         Eigen::ConjugateGradient<SpMat, Eigen::Lower> cg;
         cg.setMaxIterations(1000);
-        cg.setTolerance(0.0001);
+        cg.setTolerance(0.0001);   // The tolerance corresponds to the relative residual error: |Ax-b|/|b|
         cg.compute(Lhs);
 
         /* Prepare right hand side. */

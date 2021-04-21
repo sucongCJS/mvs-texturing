@@ -46,7 +46,7 @@ Histogram::save_to_file(std::string const & filename) const {
 }
 
 /*
-* @return 前百分之percentile占到了min~max之间的多大比重, 如果质量都比较低的话, 返回upper_bound会比较小
+* @return 前百分之percentile占到了min~max之间的多大比重, 如果质量都比较低的话, 返回upper_bound会比较小  
 * */
 float Histogram::get_approx_percentile(float percentile) const {
     assert(percentile >= 0.0f && percentile <= 1.0f);

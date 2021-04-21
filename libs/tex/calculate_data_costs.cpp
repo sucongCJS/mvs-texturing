@@ -189,19 +189,19 @@ void calculate_face_projection_infos(mve::TriangleMesh::ConstPtr mesh,
                 if (!texture_view->inside(v1, v2, v3))  // ??将点投到view上看是否有效 mask?
                     continue;
 
-                // frustum culling  ??
+                // frustum culling
                 if (settings.geometric_visibility_test) {
                     /* Viewing rays do not collide? */
                     bool visible = true;
                     math::Vec3f const * samples[] = {&v1, &v2, &v3};
                     // TODO: random monte carlo samples...
 
-                    for (std::size_t k = 0; k < sizeof(samples) / sizeof(samples[0]); ++k) {
+                    for (std::size_t k = 0; k < sizeof(samples) / sizeof(samples[0]); ++k) {  // 从三角形的三个顶点连线到view_pos看有没有被挡住, 如果其中一个被挡住, 则三角形设为不可见
                         BVHTree::Ray ray;
                         ray.origin = *samples[k];
                         ray.dir = view_pos - ray.origin;
-                        ray.tmax = ray.dir.norm();
-                        ray.tmin = ray.tmax * 0.0001f;
+                        ray.tmax = ray.dir.norm();  // BVH最大盒子的最大值 https://zhuanlan.zhihu.com/p/114307697
+                        ray.tmin = ray.tmax * 0.0001f;  // BVH最大盒子的最小值
                         ray.dir.normalize();
 
                         BVHTree::Hit hit;
@@ -241,7 +241,7 @@ void calculate_face_projection_infos(mve::TriangleMesh::ConstPtr mesh,
         {
             for (std::size_t i = projected_face_view_infos.size(); 0 < i; --i) {
                 std::size_t face_id = projected_face_view_infos[i - 1].first;  // 面
-                FaceProjectionInfo const & info = projected_face_view_infos[i - 1].second;  // 
+                FaceProjectionInfo const & info = projected_face_view_infos[i - 1].second;  // 视角信息
                 face_projection_infos->at(face_id).push_back(info);
             }
             projected_face_view_infos.clear();

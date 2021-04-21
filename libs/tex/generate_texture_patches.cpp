@@ -450,8 +450,7 @@ bool fill_hole(std::vector<std::size_t> const & hole, UniGraph const & graph,
     return true;
 }
 
-void
-generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
+void generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     mve::MeshInfo const & mesh_info,
     std::vector<TextureView> * texture_views, Settings const & settings,
     std::vector<std::vector<VertexProjectionInfo> > * vertex_projection_infos,
@@ -467,7 +466,7 @@ generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mes
 
     std::cout << "\tRunning... " << std::flush;
     #pragma omp parallel for schedule(dynamic)
-    for (std::size_t i = 0; i < texture_views->size(); ++i) {
+    for (std::size_t i = 0; i < texture_views->size(); ++i) {  // 遍历每一个视角
 
         std::vector<std::vector<std::size_t> > subgraphs;
         int const label = i + 1;

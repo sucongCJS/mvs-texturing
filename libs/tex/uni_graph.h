@@ -19,7 +19,7 @@
   */
 class UniGraph {
     private:
-        std::vector<std::vector<std::size_t> > adj_lists;
+        std::vector<std::vector<std::size_t> > adj_lists;  // 一个列表里包含每个点相邻的点的列表
         std::vector<std::size_t> labels;
         std::size_t edges;
 
