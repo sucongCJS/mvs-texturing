@@ -6,7 +6,6 @@
  * This software may be modified and distributed under the terms
  * of the BSD 3-Clause license. See the LICENSE.txt file for details.
  */
-
 #ifndef TEX_RECTANGULARBIN_HEADER
 #define TEX_RECTANGULARBIN_HEADER
 
@@ -17,10 +16,8 @@
 
 /**
   * Implementation of the binpacking algorithm GUILLUTINE from
-  * <a href="http://clb.demon.fi/files/RectangleBinPack.pdf">
-  * A Thousand Ways to Pack the Bin -
-  * A Practical Approach to Two-Dimensional Rectangle Bin Packing
-  * </a>
+  * <a href="http://pds25.egloos.com/pds/201504/21/98/RectangleBinPack.pdf">
+  * A Thousand Ways to Pack the Bin - A Practical Approach to Two-Dimensional Rectangle Bin Packing </a>
   */
 class RectangularBin {
     public:

@@ -1,31 +1,24 @@
-/*
- * Copyright (C) 2015, Nils Moehrle
- * TU Darmstadt - Graphics, Capture and Massively Parallel Computing
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms
- * of the BSD 3-Clause license. See the LICENSE.txt file for details.
- */
-
 #ifndef TEX_TEXTUREVIEW_HEADER
 #define TEX_TEXTUREVIEW_HEADER
 
 #include <string>
 #include <vector>
+#include <cassert>
 
 #include <math/vector.h>
 #include <mve/camera.h>
 #include <mve/image.h>
 
-#include "tri.h"
 #include "settings.h"
 
 TEX_NAMESPACE_BEGIN
 
-/** Struct containing the quality and mean color of a face within a view. 这个面在哪个view能看到, 以及质量和平均颜色信息*/
-struct FaceProjectionInfo {
-    std::uint16_t view_id;
-    float quality;
+/*
+* 这个面在一个view中的质量和平均颜色信息
+* */
+struct FaceProjectionInfo{
+    std::uint16_t view_id;  // 当前face对应的view
+    float quality;  // 当前face在这个view的quality
     math::Vec3f mean_color;
 
     bool operator<(FaceProjectionInfo const & other) const {
@@ -33,173 +26,107 @@ struct FaceProjectionInfo {
     }
 };
 
-/**
-  * Class representing a view with specialized functions for texturing.
-  */
-class TextureView {
-    private:
-        std::size_t id;
+class TextureView{
+private:
+    std::size_t id;  // (不变)
+    std::string image_file;  // 图片名
+    int width;  // 图片宽
+    int height;  // 图片高
+    math::Matrix3f projection;  // 图片校准矩阵 (将相机坐标中的一点投影到具有“宽度”和“高度”尺寸的图像平面, 得到的是像素中心的位置, 要得到投影后的像素坐标，必须从各个坐标中减去0.5)
+    math::Vec3f pos;  // 相机位置(世界坐标)
+    math::Vec3f viewdir;  // 视角的方向(世界坐标)
+    math::Matrix4f world_to_cam;  // 世界坐标转到视角的坐标
 
-        math::Vec3f pos;
-        math::Vec3f viewdir;
-        math::Matrix3f projection;
-        math::Matrix4f world_to_cam;
-        int width;
-        int height;
-        std::string image_file;
-        mve::ByteImage::Ptr image;
-        mve::ByteImage::Ptr gradient_magnitude;
-        std::vector<bool> validity_mask;
+    mve::ByteImage::Ptr image;  // RGBRGB...
+    mve::ByteImage::Ptr gradient_magnitude;  // 
+    std::vector<bool> validity_mask;
 
+public:
+    std::size_t get_id(void) const;  // 返回纹理视角的id
+    math::Vec3f get_viewing_direction(void) const;
+    int get_width(void) const;
+    int get_height(void) const;
+    mve::ByteImage::Ptr get_image(void) const;
 
-    public:
-        /** Returns the id of the TexureView which is consistent for every run. */
-        std::size_t get_id(void) const;
+    // 参数: 视角id, 视角的相机信息, 视角的图片
+    TextureView(std::size_t id, mve::CameraInfo const & camera, std::string const & image_file);
 
-        /** Returns the 2D pixel coordinates of the given vertex projected into the view. */
-        math::Vec2f get_pixel_coords(math::Vec3f const & vertex) const;
-        /** Returns the RGB pixel values [0, 1] for the given vertex projected into the view, calculated by linear interpolation. */
-        math::Vec3f get_pixel_values(math::Vec3f const & vertex) const;
+    // 返回位置
+    math::Vec3f get_pos(void) const;
 
-        /** Returns whether the pixel location is valid in this view.
-          * The pixel location is valid if its inside the visible area and,
-          * if a validity mask has been generated, all surrounding (integer coordinate) pixels are valid in the validity mask.
-          */
-        bool valid_pixel(math::Vec2f pixel) const;
+    // 生成 validity mask
+    void generate_validity_mask(void);
+    // 加载相应的图片
+    void load_image(void);
+    // 生成梯度图
+    void generate_gradient_magnitude(void);
+    // 侵蚀mask一个像素
+    void erode_validity_mask(void);
 
-        /** TODO */
-        bool inside(math::Vec3f const & v1, math::Vec3f const & v2, math::Vec3f const & v3) const;
+    // 释放 validity mask
+    void release_validity_mask(void);
+    // 释放梯度图
+    void release_gradient_magnitude(void);
+    // 释放相应的图片
+    void release_image(void);
+    
+    // 返回给定点投影到视角中的二维像素坐标
+    math::Vec2f get_pixel_coords(math::Vec3f const & vertex) const;
 
-        /** Returns the RGB pixel values [0, 1] for the give pixel location. */
-        math::Vec3f get_pixel_values(math::Vec2f const & pixel) const;
+    // 返回像素位置在此视角中是否有效
+    // 如果像素位置在可见区域内，则该位置有效
+    // 如果生成了validity mask，则所有周围（整数坐标）像素在validity mask中都有效。
+    bool valid_pixel(math::Vec2f pixel) const;
 
-        /** Constructs a TextureView from the give mve::CameraInfo containing the given image. */
-        TextureView(std::size_t id, mve::CameraInfo const & camera, std::string const & image_file);
-
-        /** Returns the position. */
-        math::Vec3f get_pos(void) const;
-        /** Returns the viewing direction. */
-        math::Vec3f get_viewing_direction(void) const;
-        /** Returns the width of the corresponding image. */
-        int get_width(void) const;
-        /** Returns the height of the corresponding image. */
-        int get_height(void) const;
-        /** Returns a reference pointer to the corresponding image. */
-        mve::ByteImage::Ptr get_image(void) const;
-
-        /** Exchange encapsulated image. */
-        void bind_image(mve::ByteImage::Ptr new_image);
-
-        /** Loads the corresponding image. */
-        void load_image(void);
-        /** Generates the validity mask. */
-        void generate_validity_mask(void);
-        /** Generates the gradient magnitude image for the encapsulated image. */
-        void generate_gradient_magnitude(void);
-
-        /** Releases the validity mask. */
-        void release_validity_mask(void);
-        /** Releases the gradient magnitude image. */
-        void release_gradient_magnitude(void);
-        /** Releases the corresponding image. */
-        void release_image(void);
-
-        /** Erodes the validity mask by one pixel. */
-        void erode_validity_mask(void);
-
-        void
-        get_face_info(math::Vec3f const & v1, math::Vec3f const & v2, math::Vec3f const & v3,
-            FaceProjectionInfo * face_info, Settings const & settings) const;
-
-        void
-        export_triangle(math::Vec3f v1, math::Vec3f v2, math::Vec3f v3, std::string const & filename) const;
-
-        void
-        export_validity_mask(std::string const & filename) const;
+    // v1,v2,v3为顶点的三角形是否有效, 点从世界坐标转到view坐标是否还在view的范围内, 以及看validity mask
+    bool inside(math::Vec3f const & v1, math::Vec3f const & v2, math::Vec3f const & v3) const;
+    
+    // 
+    void get_face_info(math::Vec3f const & v1, math::Vec3f const & v2, math::Vec3f const & v3, FaceProjectionInfo * face_info, Settings const & settings) const;
 };
 
+inline std::size_t TextureView::get_id(void) const{ return id; }
 
-inline std::size_t
-TextureView::get_id(void) const {
-    return id;
-}
+inline math::Vec3f TextureView::get_pos(void) const { return pos; }
 
-inline math::Vec3f
-TextureView::get_pos(void) const {
-    return pos;
-}
+inline math::Vec3f TextureView::get_viewing_direction(void) const { return viewdir; }
 
-inline math::Vec3f
-TextureView::get_viewing_direction(void) const {
-    return viewdir;
-}
+inline int TextureView::get_width(void) const { return width; }
 
-inline int
-TextureView::get_width(void) const {
-    return width;
-}
+inline int TextureView::get_height(void) const { return height; }
 
-inline int
-TextureView::get_height(void) const {
-    return height;
-}
-
-inline mve::ByteImage::Ptr
-TextureView::get_image(void) const {
+inline mve::ByteImage::Ptr TextureView::get_image(void) const {
     assert(image != NULL);
     return image;
 }
 
-inline bool
-TextureView::inside(math::Vec3f const & v1, math::Vec3f const & v2, math::Vec3f const & v3) const {
-    math::Vec2f p1 = get_pixel_coords(v1);
-    math::Vec2f p2 = get_pixel_coords(v2);
-    math::Vec2f p3 = get_pixel_coords(v3);
-    return valid_pixel(p1) && valid_pixel(p2) && valid_pixel(p3);
-}
-
-inline math::Vec2f
-TextureView::get_pixel_coords(math::Vec3f const & vertex) const {
-    math::Vec3f pixel = projection * world_to_cam.mult(vertex, 1.0f);  // ??怎么转
-    pixel /= pixel[2];
-    return math::Vec2f(pixel[0] - 0.5f, pixel[1] - 0.5f);
-}
-
-inline math::Vec3f
-TextureView::get_pixel_values(math::Vec3f const & vertex) const {
-    math::Vec2f pixel = get_pixel_coords(vertex);
-    return get_pixel_values(pixel);
-}
-
-inline math::Vec3f
-TextureView::get_pixel_values(math::Vec2f const & pixel) const {
+inline void TextureView::release_image(void) {
     assert(image != NULL);
-    math::Vec3uc values;
-    image->linear_at(pixel[0], pixel[1], *values);
-    return math::Vec3f(values) / 255.0f;
+    image.reset();
 }
 
-inline void
-TextureView::bind_image(mve::ByteImage::Ptr new_image) {
-    image = new_image;
-}
-
-inline void
-TextureView::release_validity_mask(void) {
-    assert(validity_mask.size() == static_cast<std::size_t>(width * height));
-    validity_mask = std::vector<bool>();
-}
-
-inline void
-TextureView::release_gradient_magnitude(void) {
+inline void TextureView::release_gradient_magnitude(void) {
     assert(gradient_magnitude != NULL);
     gradient_magnitude.reset();
 }
 
-inline void
-TextureView::release_image(void) {
-    assert(image != NULL);
-    image.reset();
+inline void TextureView::release_validity_mask(void) {
+    assert(validity_mask.size() == static_cast<std::size_t>(width * height));
+    validity_mask = std::vector<bool>();
+}
+
+inline math::Vec2f TextureView::get_pixel_coords(math::Vec3f const & vertex) const {
+    math::Vec3f pixel = projection * world_to_cam.mult(vertex, 1.0f);  // 
+    pixel /= pixel[2];  // 齐次归一
+    return math::Vec2f(pixel[0] - 0.5f, pixel[1] - 0.5f);  // 从像素中心到右上角
+}
+
+inline bool TextureView::inside(math::Vec3f const & v1, math::Vec3f const & v2, math::Vec3f const & v3) const {
+    // 获得投影到视角坐标的二维位置
+    math::Vec2f p1 = get_pixel_coords(v1);
+    math::Vec2f p2 = get_pixel_coords(v2);
+    math::Vec2f p3 = get_pixel_coords(v3);
+    return valid_pixel(p1) && valid_pixel(p2) && valid_pixel(p3);
 }
 
 TEX_NAMESPACE_END

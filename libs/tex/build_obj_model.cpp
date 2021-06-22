@@ -15,8 +15,7 @@
 
 TEX_NAMESPACE_BEGIN
 
-void
-build_model(mve::TriangleMesh::ConstPtr mesh,
+void build_model(mve::TriangleMesh::ConstPtr mesh,
     std::vector<TextureAtlas::Ptr> const & texture_atlases, ObjModel * obj_model)  {
 
     mve::TriangleMesh::VertexList const & mesh_vertices = mesh->get_vertices();

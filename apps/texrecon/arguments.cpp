@@ -1,77 +1,20 @@
-/*
- * Copyright (C) 2015, Nils Moehrle, Michael Waechter
- * TU Darmstadt - Graphics, Capture and Massively Parallel Computing
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms
- * of the BSD 3-Clause license. See the LICENSE.txt file for details.
- */
-
 #include "arguments.h"
 #include "util/file_system.h"
 
-#define SKIP_GLOBAL_SEAM_LEVELING "skip_global_seam_leveling"
-#define SKIP_GEOMETRIC_VISIBILITY_TEST "skip_geometric_visibility_test"
-#define SKIP_LOCAL_SEAM_LEVELING "skip_local_seam_leveling"
-#define NO_INTERMEDIATE_RESULTS "no_intermediate_results"
-#define WRITE_TIMINGS "write_timings"
-#define SKIP_HOLE_FILLING "skip_hole_filling"
-#define KEEP_UNSEEN_FACES "keep_unseen_faces"
-#define SAVE_UNTEXTURED_FACES_MESH "write_untextured_faces_mesh"
-#define NUM_THREADS "num_threads"
-
-Arguments parse_args(int argc, char **argv) {
+Arguments parse_args(int argc, char **argv){
     util::Arguments args;
-    args.set_exit_on_error(true);
-    args.set_nonopt_maxnum(3);
+    args.set_exit_on_error(true);  // 参数解析出错退出
+    args.set_nonopt_maxnum(3);  // 必须有三个非选项参数: 
     args.set_nonopt_minnum(3);
     args.set_helptext_indent(34);
-    args.set_description("Textures a mesh given images in form of a 3D scene.");
-    args.set_usage("Usage: " + std::string(argv[0]) + " [options] IN_SCENE IN_MESH OUT_PREFIX"
-        "\n\nIN_SCENE := (SCENE_FOLDER | BUNDLE_FILE | MVE_SCENE::EMBEDDING)"
-        "\n\nSCENE_FOLDER:"
-        "\nWithin a scene folder a .cam file has to be given for each image."
-        "\nA .cam file is structured as follows:"
-        "\n    tx ty tz R00 R01 R02 R10 R11 R12 R20 R21 R22"
-        "\n    f d0 d1 paspect ppx ppy"
-        "\nFirst line: Extrinsics - translation vector and rotation matrix (the transform from world to camera)"
-        "\nSecond line: Intrinsics - focal length, distortion coefficients, pixel aspect ratio and principal point"
-        "\nThe focal length is the distance between camera center and image plane normalized by dividing with the larger image dimension."
-        "\nFor non zero distortion coefficients the image will be undistorted prior to the texturing process."
-        " If only d0 is non zero the Noah Snavely's distortion model is assumed otherwise the distortion model of VSFM is assumed."
-        "\nThe pixel aspect ratio is usually 1 or close to 1. If your SfM system doesn't output it, but outputs a different focal length in x and y direction, you have to encode this here."
-        "\nThe principal point has to be given in unit dimensions (e.g. 0.5 0.5)."
-        "\n\nBUNDLE_FILE:"
-        "\nCurrently only NVM bundle files (from VisualSFM, http://ccwu.me/vsfm/) are supported."
-        "\nSince the bundle file contains relative paths to the images please make sure you did not move them (relative to the bundle) or rename them after the bundling process."
-        "\n\nMVE_SCENE::EMBEDDING:"
-        "\nThis is the scene representation we use in our research group: http://www.gris.tu-darmstadt.de/projects/multiview-environment/."
-        "\n\nIN_MESH:"
-        "\nThe mesh that you want to texture and which needs to be in the same coordinate frame as the camera parameters. You can reconstruct one, e.g. with CMVS: http://www.di.ens.fr/cmvs/"
-        "\n\nOUT_PREFIX:"
-        "\nA path and name for the output files, e.g. <path>/<to>/my_textured_mesh"
-        "\nDon't append an obj extension. The application does that itself because it outputs multiple files (mesh, material file, texture files)."
-        "\n");
-    args.add_option('D',"data_cost_file", true, "Skip calculation of data costs and use the ones provided in the given file");
-    args.add_option('L',"labeling_file", true, "Skip view selection and use the labeling provided in the given file");
-    args.add_option('d',"data_term", true,
-        "Data term: {" + choices<tex::DataTerm>() + "} [" + choice_string<tex::DataTerm>(tex::DATA_TERM_GMI) + "]");
-    args.add_option('s',"smoothness_term", true,
-        "Smoothness term: {" + choices<tex::SmoothnessTerm>() + "} [" + choice_string<tex::SmoothnessTerm>(tex::SMOOTHNESS_TERM_POTTS) + "]");
-    args.add_option('o',"outlier_removal", true,
-        "Photometric outlier (pedestrians etc.) removal method: {" + choices<tex::OutlierRemoval>() +  "} [" + choice_string<tex::OutlierRemoval>(tex::OUTLIER_REMOVAL_NONE) + "]");
-    args.add_option('t',"tone_mapping", true,
-        "Tone mapping method: {" + choices<tex::ToneMapping>() +  "} [" + choice_string<tex::ToneMapping>(tex::TONE_MAPPING_NONE) + "]");
-    args.add_option('v',"view_selection_model", false, "Write out view selection model [false]");
-    args.add_option('\0', SKIP_GEOMETRIC_VISIBILITY_TEST, false, "Skip geometric visibility test based on ray intersection [false]");
-    args.add_option('\0', SKIP_GLOBAL_SEAM_LEVELING, false, "Skip global seam leveling [false]");
-    args.add_option('\0', SKIP_LOCAL_SEAM_LEVELING, false, "Skip local seam leveling (Poisson editing) [false]");
-    args.add_option('\0', SKIP_HOLE_FILLING, false, "Skip hole filling [false]");
-    args.add_option('\0', KEEP_UNSEEN_FACES, false, "Keep unseen faces [false]");
-    args.add_option('\0', WRITE_TIMINGS, false, "Write out timings for each algorithm step (OUT_PREFIX + _timings.csv)");
-    args.add_option('\0', SAVE_UNTEXTURED_FACES_MESH, false, "Save untextured faces to seperate mesh file [false]");
-    args.add_option('\0', NO_INTERMEDIATE_RESULTS, false, "Do not write out intermediate results");
-    args.add_option('\0', NUM_THREADS, true, "How many threads to use. Set 1 for determinism.");
+    args.set_description("作用: 使用3D场景形式的图片给网格贴纹理");
+    args.set_usage("使用方法: " + std::string(argv[0]) + " [选项] scene目录::图片名 mesh文件 输出前缀"
+        "\n - scene目录:使用MVE得到的一个包含相机参数, 图片等信息的目录"
+        "\n - 图片名: scene目录中图片的名, 不带扩展名"
+        "\n - mesh文件: 要对其进行纹理处理的.ply网格文件, 可以使用MVE生成"
+        "\n - 输出前缀: 输出文件的路径和名称, 不需要附加对象扩展名, 因为程序会输出多个包含这个前缀的文件(网格、材质文件、纹理文件)"
+    );
+
     args.parse(argc, argv);
 
     Arguments conf;
@@ -79,73 +22,7 @@ Arguments parse_args(int argc, char **argv) {
     conf.in_mesh = args.get_nth_nonopt(1);
     conf.out_prefix = util::fs::sanitize_path(args.get_nth_nonopt(2));
 
-    /* Set defaults for optional arguments. */
-    conf.data_cost_file = "";
-    conf.labeling_file = "";
-
-    conf.write_timings = false;
-    conf.write_intermediate_results = true;
-    conf.write_view_selection_model = false;
-
     conf.num_threads = -1;
 
-    /* Handle optional arguments. */
-    for (util::ArgResult const* i = args.next_option(); i != 0; i = args.next_option()) {
-        switch (i->opt->sopt) {
-            case 'v': conf.write_view_selection_model = true; break;
-            case 'D': conf.data_cost_file = i->arg; break;
-            case 'L': conf.labeling_file = i->arg; break;
-            case 'd': conf.settings.data_term = parse_choice<tex::DataTerm>(i->arg); break;
-            case 's': conf.settings.smoothness_term = parse_choice<tex::SmoothnessTerm>(i->arg); break;
-            case 'o': conf.settings.outlier_removal = parse_choice<tex::OutlierRemoval>(i->arg); break;
-            case 't': conf.settings.tone_mapping = parse_choice<tex::ToneMapping>(i->arg); break;
-            case '\0':
-                if (i->opt->lopt == SKIP_GEOMETRIC_VISIBILITY_TEST)
-                    conf.settings.geometric_visibility_test = false;
-                else if (i->opt->lopt == SKIP_GLOBAL_SEAM_LEVELING)
-                    conf.settings.global_seam_leveling = false;
-                else if (i->opt->lopt == SKIP_LOCAL_SEAM_LEVELING)
-                    conf.settings.local_seam_leveling = false;
-                else if (i->opt->lopt == SKIP_HOLE_FILLING)
-                    conf.settings.hole_filling = false;
-                else if (i->opt->lopt == KEEP_UNSEEN_FACES)
-                    conf.settings.keep_unseen_faces = true;
-                else if (i->opt->lopt == SAVE_UNTEXTURED_FACES_MESH)
-                    conf.settings.save_untextured_faces_mesh = true;
-                else if (i->opt->lopt == WRITE_TIMINGS)
-                    conf.write_timings = true;
-                else if (i->opt->lopt == NO_INTERMEDIATE_RESULTS)
-                    conf.write_intermediate_results = false;
-                else if (i->opt->lopt == NUM_THREADS)
-                    conf.num_threads = std::stoi(i->arg);
-                else
-                    throw std::invalid_argument("Invalid long option");
-                break;
-            default:
-                throw std::invalid_argument("Invalid short option");
-        }
-    }
-
     return conf;
-}
-
-std::string bool_to_string(bool b){
-    return b ? "True" : "False";
-}
-
-std::string Arguments::to_string(){
-    std::stringstream out;
-    out << "Input scene: \t" << in_scene << std::endl
-        << "Input mesh: \t" << in_mesh << std::endl
-        << "Output prefix: \t" << out_prefix << std::endl
-        << "Datacost file: \t" << data_cost_file << std::endl
-        << "Labeling file: \t" << labeling_file << std::endl
-        << "Data term: \t" << choice_string<tex::DataTerm>(settings.data_term) << std::endl
-        << "Smoothness term: \t" << choice_string<tex::SmoothnessTerm>(settings.smoothness_term) << std::endl
-        << "Outlier removal method: \t" << choice_string<tex::OutlierRemoval>(settings.outlier_removal) << std::endl
-        << "Tone mapping: \t" << choice_string<tex::ToneMapping>(settings.tone_mapping) << std::endl
-        << "Apply global seam leveling: \t" << bool_to_string(settings.global_seam_leveling) << std::endl
-        << "Apply local seam leveling: \t" << bool_to_string(settings.local_seam_leveling) << std::endl;
-
-    return out.str();
 }
