@@ -5,7 +5,7 @@
 TEX_NAMESPACE_BEGIN
 
 /*
-* 有共用的边就算相邻
+* 有共用的边就算相邻咯
 * */
 void build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh, mve::MeshInfo const & mesh_info, Graph * graph){
     mve::TriangleMesh::FaceList const & faces = mesh->get_faces();
