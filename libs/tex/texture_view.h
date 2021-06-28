@@ -54,6 +54,8 @@ public:
     // 返回位置
     math::Vec3f get_pos(void) const;
 
+    // 修改原来的图片
+    void bind_image(mve::ByteImage::Ptr new_image);
     // 生成 validity mask
     void generate_validity_mask(void);
     // 加载相应的图片
@@ -94,6 +96,10 @@ inline math::Vec3f TextureView::get_viewing_direction(void) const { return viewd
 inline int TextureView::get_width(void) const { return width; }
 
 inline int TextureView::get_height(void) const { return height; }
+
+inline void TextureView::bind_image(mve::ByteImage::Ptr new_image) {
+    image = new_image;
+}
 
 inline mve::ByteImage::Ptr TextureView::get_image(void) const {
     assert(image != NULL);

@@ -217,7 +217,8 @@ bool photometric_outlier_detection(std::vector<FaceProjectionInfo> * infos, Sett
             case OUTLIER_REMOVAL_GAUSS_DAMPING:
                 info.quality *= gauss_value; break;
             case OUTLIER_REMOVAL_GAUSS_CLAMPING:
-                if (gauss_value < gauss_rejection_threshold) info.quality = 0.0f; break;
+                if (gauss_value < gauss_rejection_threshold) {info.quality = 0.0f; break;}
+                else break;  // ???是吗
         }
     }
     return true;

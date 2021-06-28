@@ -102,7 +102,7 @@ void generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patc
     }
 
     // 通过对纹理块按大小降序排序, 提高把纹理块(patch)装到纹理集(atalas)中的效率
-    std::cout << "\t 给纹理块排序... " << std::flush;
+    std::cout << "\t给纹理块排序... " << std::flush;
     texture_patches.sort(comp);
     std::cout << "完成." << std::endl;
 
@@ -142,10 +142,10 @@ void generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patc
         texture_atlas->finalize();
     }
 
-    std::cout << "\r\t 处理" << texture_atlases->size() << "个纹理集 ... 完成." << std::endl;
+    std::cout << "\r\t处理" << texture_atlases->size() << "个纹理集 ... 完成." << std::endl;
 
     #pragma omp taskwait
-    std::cout << "\t 所有的纹理集生成完毕" << std::endl;
+    std::cout << "\t所有的纹理集生成完毕" << std::endl;
 
     /* End of single region */
     }

@@ -15,6 +15,7 @@
 #include <mve/mesh.h>
 #include <util/exception.h>
 #include <util/file_system.h>
+#include <iostream>
 
 #include "obj_model.h"
 
@@ -28,7 +29,6 @@ ObjModel::save(ObjModel const & model, std::string const & prefix) {
 void
 ObjModel::save_to_files(std::string const & prefix) const {
     material_lib.save_to_files(prefix);
-
     std::string name = util::fs::basename(prefix);
     std::ofstream out((prefix + ".obj").c_str());
     if (!out.good())

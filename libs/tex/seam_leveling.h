@@ -5,6 +5,9 @@
 
 #include <mve/mesh.h>
 
+#include "defines.h"
+#include "uni_graph.h"
+
 TEX_NAMESPACE_BEGIN
 
 struct VertexProjectionInfo {
@@ -52,6 +55,8 @@ struct MeshEdge {
 //     }
     
 // }
+
+void find_seam_edges(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh, std::vector<MeshEdge> * seam_edges);
 
 TEX_NAMESPACE_END
 

@@ -78,6 +78,14 @@ void generate_texture_atlases(TexturePatches * texture_patches,
     Settings const & settings, TextureAtlases * texture_atlases);
 
 /**
+  * 局部颜色调整
+  */
+void local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
+    mve::MeshInfo const & mesh_info,
+    VertexProjectionInfos const & vertex_projection_infos,
+    TexturePatches * texture_patches);
+
+/**
   * Builds up an model for the mesh by constructing materials and
   * texture atlases form the texture_patches
   */
