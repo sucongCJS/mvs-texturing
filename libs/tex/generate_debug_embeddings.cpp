@@ -1,3 +1,5 @@
+#include <random>
+
 #include "debug.h"
 
 TEX_NAMESPACE_BEGIN
@@ -31,6 +33,38 @@ void generate_debug_colors(std::vector<math::Vec4f> & colors) {
     }
 }
 
+// 每三列构成一个数字 0~9
+const bool font[] = {
+    0,1,0, 0,1,0, 1,1,0, 1,1,0, 1,0,0, 1,1,1, 0,1,0, 1,1,1, 0,1,0 ,0,1,0,
+    1,0,1, 1,1,0, 0,0,1, 0,0,1, 1,0,1, 1,0,0, 1,0,0, 0,0,1, 1,0,1, 1,0,1,
+    1,0,1, 0,1,0, 0,1,0, 0,1,0, 1,1,1, 1,1,0, 1,1,0, 0,0,1, 0,1,0, 0,1,1,
+    1,0,1, 0,1,0, 1,0,0, 0,0,1, 0,0,1, 0,0,1, 1,0,1, 0,1,0, 1,0,1, 0,0,1,
+    0,1,0, 1,1,1, 1,1,1, 1,1,0, 0,0,1, 1,1,0, 0,1,0, 0,1,0, 0,1,0, 0,1,0
+};
+
+
+/**
+  * @brief 画数字
+  * @param 
+  * @return 
+  */
+void print_number(mve::ByteImage::Ptr image, int x, int y, int digit, math::Vec3uc color) {
+    assert(0 <= x && x < image->width() - 3);
+    assert(0 <= y && y < image->height() - 5);
+    assert(0 <= digit && digit <= 9);
+
+    // 一个数字占15个像素
+    for(int i = 0; i < 3; ++i) {
+        for(int j = 0; j < 5; ++j) {
+            if(font[30 * j + digit * 3 + i]) {
+                for(int c = 0; c < image->channels(); ++c) {
+                    image->at(x+i, y+j, c) = color[c];
+                }
+            }
+        }
+    }
+}
+
 void generate_debug_embeddings(std::vector<TextureView> * texture_views){
     std::vector<math::Vec4f> colors;
     generate_debug_colors(colors);
@@ -52,6 +86,19 @@ void generate_debug_embeddings(std::vector<TextureView> * texture_views){
 
         mve::ByteImage::Ptr image = mve::ByteImage::create(texture_view->get_width(), texture_view->get_height(), 3);
         image->fill_color(*bg_color);
+
+        for(int ox=0; ox < image->width() - 13; ox += 13) {
+            for(int oy=0; oy < image->height() - 6; oy += 6) {
+                std::size_t id = texture_view->get_id();
+                int d0 = id / 100;
+                int d1 = (id % 100) / 10;
+                int d2 = id % 10;
+
+                print_number(image, ox, oy, d0, font_color);
+                print_number(image, ox + 4, oy, d1, font_color);
+                print_number(image, ox + 8, oy, d2, font_color);
+            }
+        }
 
         texture_view->bind_image(image);
     }

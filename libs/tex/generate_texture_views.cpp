@@ -25,7 +25,7 @@ void from_mve_scene(std::string const & scene_dir, std::string const & image_nam
     std::size_t num_views = scene->get_views().size();
     texture_views->reserve(num_views);
 
-    ProgressCounter view_counter("\t 加载视角图片: ", num_views);
+    ProgressCounter view_counter("\t加载视角图片: ", num_views);
     for(std::size_t i=0; i<num_views; ++i){  // 遍历每一个view
         view_counter.progress<SIMPLE>();
 

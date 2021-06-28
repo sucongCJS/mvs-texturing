@@ -11,7 +11,7 @@ void build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh, mve::MeshInfo const
     mve::TriangleMesh::FaceList const & faces = mesh->get_faces();
     std::size_t const num_faces = faces.size() / 3;
 
-    ProgressCounter face_counter("\t 添加边到邻接图: ", num_faces);
+    ProgressCounter face_counter("\t添加边到邻接图: ", num_faces);
     for(std::size_t i=0; i<faces.size(); i+=3){
         face_counter.progress<SIMPLE>();
 
@@ -38,7 +38,7 @@ void build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh, mve::MeshInfo const
         }
         face_counter.inc();
     }
-    std::cout<<"\t 共"<<graph->num_edges()<<"条边"<<std::endl;
+    std::cout<<"\t共"<<graph->num_edges()<<"条边"<<std::endl;
 }
 
 TEX_NAMESPACE_END
